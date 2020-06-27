@@ -1,0 +1,381 @@
+// ---------------------------------------------------------------
+// Programming Assignment:	Course Project
+// Developer:			Benjamin Nooner
+// Date Written:		    4/1/2020
+// Purpose:				Loan Payment Calculator
+// ---------------------------------------------------------------
+
+#include <iostream>
+#include <iomanip>
+#include <cmath>
+#include <fstream>
+#include <string>
+#include <conio.h>
+#include <windows.h>
+
+using namespace std;
+
+struct loan // making a structure to organize the properties of the loan
+{
+    float interestRate = 0,
+        amountOfLoan = 0,
+        monthlyPayment = 0,
+        totalInterest = 0,
+        totalToPay = 0;
+    int lengthOfLoan = 0;
+};
+
+loan newLoan; // creating a global instance of the loan for all functions to work with
+
+//Function prototypes for solving for loan attributes
+//They will also handle gathering the information that is needed to do so
+void slv_LengthOfLoan(loan& newLoan);
+void slv_MonthlyPayment(loan& newLoan);
+void slv_LoanAmount(loan& newLoan);
+void slv_InterestRate(loan& newLoan);
+
+//Function prototype for printing the loan summary
+void prnt_LoanSummary(loan& newLoan);
+//Same function, but this one will print out to a file
+void prnt_LoanSummary(string file_name, loan& newLoan);
+
+//Function prototypes for generating the loan report
+void prnt_loanReport(loan& newLoan, string file_name);
+void view_loanReport(string file_name);
+
+
+int main()
+{
+    // Constants for menu selection values
+    const char
+        SLV_MONTHLY_PAYMENT = '1',
+        SLV_LOAN_AMOUNT = '2',
+        SLV_LENGTH_OF_LOAN = '3',
+        SLV_INTEREST_RATE = '4',
+        EXIT = '5';
+
+    int selection = 0;
+
+    system("Color 0E"); //make the text yellow/orange
+    cout << "Welcome to Loan Calculator!\n"; 
+
+    while (true)
+    {
+        //Use the system calls to add a little color flair
+        system("Color 04"); //make the text red
+        cout << "What would you like to solve for?:\n"; 
+        system("Color 06"); //make the text yellow
+        cout << "1: Monthly Payment\n"; 
+        system("Color 02"); //make the text green
+        cout << "2: Loan Amount\n";   
+        system("Color 03"); //make the text aqua
+        cout << "3: Length of Loan\n";
+        system("Color 01"); //make the text blue
+        cout << "4: Interest Rate\n";   
+        system("Color 05"); //make the text purple
+        cout << "5: Exit\n";            
+        system("Color 0D"); //make the text light purple
+        cout << "Your selection:\t";  
+        system("Color 0A");  //set the text to green
+
+       //Use _getch() to have the user not have to hit enter after making a selection
+        selection = _getch();
+        cout << endl;
+
+        if (selection == SLV_MONTHLY_PAYMENT) //solve for monthly payment
+        {
+            slv_MonthlyPayment(newLoan); // fucntion called that gathers information and solves for monthly payment
+
+            //Use the values gathered from the fucntion to assign values to these variables
+            newLoan.totalInterest = newLoan.amountOfLoan * newLoan.interestRate;
+            newLoan.totalToPay = newLoan.totalInterest + newLoan.amountOfLoan;
+
+            //print the summary of the loan and each of the values that characterize it
+            prnt_LoanSummary(newLoan);
+        }
+        else if (selection == SLV_LOAN_AMOUNT) // solve for Loan amount
+        {
+            slv_LoanAmount(newLoan); // fucntion called to gather data and solve for the loan amount
+
+            //Use the values gathered from the fucntion to assign values to these variables
+            newLoan.totalInterest = newLoan.amountOfLoan * newLoan.interestRate;
+            newLoan.totalToPay = newLoan.totalInterest + newLoan.amountOfLoan;
+
+            //print the summary of the loan and each of the values that characterize it
+            prnt_LoanSummary(newLoan);
+        }
+        else if (selection == SLV_LENGTH_OF_LOAN) //solve for Length of loan
+        {
+            slv_LengthOfLoan(newLoan); //fucntion called to gather data and solve for the length of the loan
+
+            //Use the values gathered from the fucntion to assign values to these variables
+            newLoan.totalInterest = newLoan.amountOfLoan * newLoan.interestRate;
+            newLoan.totalToPay = newLoan.totalInterest + newLoan.amountOfLoan;
+
+            //print the summary of the loan and each of the values that characterize it
+            prnt_LoanSummary(newLoan);
+        }
+        else if (selection == SLV_INTEREST_RATE) //solve for Interest Rate
+        {
+            slv_InterestRate(newLoan); //function called to gather data and solve for the interest rate
+
+            //Use the values gathered from the fucntion to assign values to these variables
+            newLoan.totalInterest = newLoan.amountOfLoan * newLoan.interestRate;
+            newLoan.totalToPay = newLoan.totalInterest + newLoan.amountOfLoan;
+
+            //print the summary of the loan and each of the values that characterize it
+            prnt_LoanSummary(newLoan);
+        }
+        else if (selection == EXIT)
+        {
+            break;
+        }
+        else if (selection > EXIT)
+        {
+            cout << "Invalid selection\n";
+            continue;
+        }
+
+        //Once the user has found the missing data, the can then choose to print out the montly report //
+        int viewSummary;
+        const char
+            SEE_SUMMARY = '1',
+            NO_SUMMARY = '2';
+
+        cout << endl << "Would you like to save the report and monthly summary for this loan?"
+            << endl << "1: Yes \n2: No \nYour Selection: ";
+
+        //Use _getch() to have the user not have to hit enter after making a selection
+        getchar(); //catch any left over line terminators so that they are not passed into viewSummary
+        viewSummary = _getch();
+        cout << endl;
+
+        while (true)
+        {
+            if (viewSummary == SEE_SUMMARY)
+            {
+                string file_name;
+                cout << "What would you like the name of the file to be?: ";
+
+                getline(cin, file_name);
+                file_name = file_name + ".txt"; // add ".txt" so that the user doesn't have to worry about it
+
+                //print the summary of the loan and each of the values that characterize it to a file
+                prnt_LoanSummary(file_name, newLoan);
+
+                //Print out the amortization schedule for the loan to  the file and have the option to have it
+                // displayed on the terminal
+                prnt_loanReport(newLoan, file_name);
+
+                break;
+
+            }
+            else if (viewSummary == NO_SUMMARY)
+            {
+                cout << endl; // make some space before the menu is printed out again
+                break;
+            }
+            else
+            {
+                cout << "Invalid option selected!";
+            }
+        }
+
+
+    }
+
+    cout << endl << endl
+        << "Goodbye!\n";
+    system("pause");
+}
+
+
+//   Function to solve for the length of the loan
+void slv_LengthOfLoan(loan& newLoan)
+{
+    cout << "Please input the following data\n"
+        << "Interest Rate (as percentage):\t";
+    cin >> newLoan.interestRate;
+    newLoan.interestRate = newLoan.interestRate / 100;
+    cout << "Amount of Loan:\t\t\t";
+    cin >> newLoan.amountOfLoan;
+    cout << "Monthly Payment:\t\t";
+    cin >> newLoan.monthlyPayment;
+
+    newLoan.lengthOfLoan = ceil(((newLoan.amountOfLoan * newLoan.interestRate) + newLoan.amountOfLoan) / newLoan.monthlyPayment);
+}
+
+//  Fucntion to solve for the monthly payment of the loan
+void slv_MonthlyPayment(loan& newLoan)
+{
+    cout << "Please input the following data\n"
+        << "Interest Rate (as percentage):\t";
+    cin >> newLoan.interestRate;
+    newLoan.interestRate = newLoan.interestRate / 100; // changed this so that the user can work with percentages
+    cout << "Length of Loan (in months):\t";
+    cin >> newLoan.lengthOfLoan;
+    cout << "Amount of the loan:\t\t";
+    cin >> newLoan.amountOfLoan;
+
+    newLoan.monthlyPayment = ((newLoan.amountOfLoan * newLoan.interestRate) + newLoan.amountOfLoan) / newLoan.lengthOfLoan;
+}
+
+// Function to solve for the loan amount
+void slv_LoanAmount(loan& newLoan)
+{
+    cout << "Please input the following data\n"
+        << "Interest Rate (as percentage):\t";
+    cin >> newLoan.interestRate;
+    newLoan.interestRate = newLoan.interestRate / 100;
+    cout << "Length of Loan (in months):\t";
+    cin >> newLoan.lengthOfLoan;
+    cout << "Monthly Payment:\t\t";
+    cin >> newLoan.monthlyPayment;
+
+    // add one to the interested rate to make the calc (total with interest) / (%100 + interest rate)
+    newLoan.amountOfLoan = (newLoan.monthlyPayment * newLoan.lengthOfLoan) / (1 + newLoan.interestRate);
+}
+
+//Function to solve for the Interest rate of the loan
+void slv_InterestRate(loan& newLoan)
+{
+    cout << "Please input the following data\n"
+        << "Length of Loan (in months):\t";
+    cin >> newLoan.lengthOfLoan;
+    cout << "Amount of Loan:\t\t\t";
+    cin >> newLoan.amountOfLoan;
+    cout << "Monthly Payment:\t\t";
+    cin >> newLoan.monthlyPayment;
+
+    newLoan.interestRate = ((newLoan.monthlyPayment * newLoan.lengthOfLoan) - newLoan.amountOfLoan) / newLoan.amountOfLoan;
+}
+
+// Function for printing the loan summary
+void prnt_LoanSummary(loan& newLoan)
+{
+    cout << fixed << setprecision(2);
+    cout << endl
+        << "Loan report:" << endl
+        << "------------" << endl
+        << "Interest Rate:\t\t" << (newLoan.interestRate * 100) << "%\n"
+        << "Length of Loan:\t\t" << newLoan.lengthOfLoan << " months" << endl
+        << "Amount of the loan:\t$" << newLoan.amountOfLoan << endl
+        << "Interest to be Paid:\t$" << newLoan.totalInterest << endl
+        << "Total to be Paid:\t$" << newLoan.totalToPay << endl
+        << "Monthly Payment:\t$" << newLoan.monthlyPayment
+        << endl << "------------" << endl;
+}
+
+//Overloaded fucntion to print the summary out to a text file
+void prnt_LoanSummary(string file_name, loan& newLoan)
+{
+
+    ofstream loanReport(file_name, ios::out | ios::app);
+    loanReport << fixed << setprecision(2);
+    loanReport << "Loan report:" << endl
+        << "------------" << endl
+        << "Interest Rate:\t\t" << (newLoan.interestRate * 100) << "%\n"
+        << "Length of Loan:\t\t" << newLoan.lengthOfLoan << " months" << endl
+        << "Amount of the loan:\t$" << newLoan.amountOfLoan << endl
+        << "Interest to be Paid:\t$" << newLoan.totalInterest << endl
+        << "Total to be Paid:\t$" << newLoan.totalToPay << endl
+        << "Monthly Payment:\t$" << newLoan.monthlyPayment
+        << endl << "------------" << "," << endl;
+
+    loanReport.close();
+}
+
+//Function prototypes for generating the loan report
+void prnt_loanReport(loan& newLoan, string file_name)
+{
+    // let the user name the file
+    string recBreak = "";
+    recBreak.assign(30, '-');
+
+    ofstream loanReport(file_name, ios::app); // open up the output file stream
+
+    const int MAX_MONTHS = 600;
+    //initialize a 2D array to store the monthly payment schedule values
+    // and print them out with for loops
+    float monthlySummary[MAX_MONTHS][3],
+        totalPaid = 0,
+        totalRemain = 0;
+
+    // cycle through the months as rows, using the length of the loan as the number of rows to fill
+    for (int row = 0; row < newLoan.lengthOfLoan; row++)
+    {
+        float totalToPay = newLoan.totalToPay;
+        totalPaid = (row + 1) * newLoan.monthlyPayment;
+        totalRemain = totalToPay - totalPaid;
+
+        if (totalRemain < 0)
+        {
+            newLoan.monthlyPayment += totalRemain;
+            totalRemain = 0;
+            totalPaid = totalToPay;
+        }
+        for (int col = 0; col < 3; col++)
+        {
+            if (col == 0)
+            {
+                monthlySummary[row][0] = newLoan.monthlyPayment;
+            }
+            else if (col == 1)
+            {
+                monthlySummary[row][1] = totalPaid;
+            }
+            else if (col == 2)
+            {
+                monthlySummary[row][2] = totalRemain;
+            }
+        }
+
+        loanReport << "__MONTH " << row + 1 << "__"
+            << endl << "Monthly Payment: $" << monthlySummary[row][0]
+            << endl << "Total Paid: $" << monthlySummary[row][1]
+            << endl << "Balance remaining: $" << monthlySummary[row][2]
+            << endl << recBreak << "," << endl;
+    }
+
+    loanReport.close();
+
+    char displayReport;
+    cout << "Would you like to display the report to the screen? (Y/N)\n";
+
+    // Use _getch() to have the user not have to hit enter after making a selection
+    displayReport = _getch();
+    cout << endl;
+    if (displayReport == 'Y' || displayReport == 'y')
+    {
+        view_loanReport(file_name);
+        cout << "Press <ENTER> to continue...";
+        cin.ignore();
+    }
+    else
+    {
+        cout << "We will not display the report to screen.\n";
+    }
+
+
+}
+
+//access the text file the loan report is in and print its contents to the screen
+void view_loanReport(string file_name)
+{
+    ifstream loanReport(file_name, ios::in); // Open input filestream
+    if (loanReport.is_open())
+    {
+        while (!loanReport.eof())
+        {
+            string dataBuffer;
+            getline(loanReport, dataBuffer, ',');
+            cout << dataBuffer;
+        }
+
+    }
+    else
+    {
+        cout << "File is cannot be opened!";
+    }
+
+}
